@@ -1,6 +1,6 @@
-const { createGzip } = require('zlib');
-
 const argv = require('minimist')(process.argv.slice(2));
+
+const streams = require('memory-streams');
 
 const { getOctokitAppClient, getOctokitAppInstallationClient } = require('./lib/github-app');
 const octokit = getOctokitAppClient();
@@ -31,7 +31,9 @@ const { encode } = require('./lib/gzip-b64-encode');
     const tool = argv.tool;
 
     // Encode STDIN, we expect the SARIF report to be passed to us over STDIN
-    const sarif = await encode(process.stdin);
+    const output = new streams.WritableStream();
+    await encode({ output })
+    const sarif = output.toString();
 
     // Get the installation
     // https://docs.github.com/en/rest/reference/apps#get-a-repository-installation-for-the-authenticated-app
